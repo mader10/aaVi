@@ -1,6 +1,7 @@
 {
-  "name": "rest-express",
+  "name": "aavideo",
   "version": "1.0.0",
+  "description": "High-quality video downloader for social media platforms",
   "type": "module",
   "license": "MIT",
   "scripts": {

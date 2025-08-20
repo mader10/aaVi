@@ -103,9 +103,7 @@ export function QueueItem({ item }: QueueItemProps) {
   };
 
   const handleDownload = () => {
-    if (item.fileName) {
-      window.open(`/downloads/${item.fileName}`, '_blank');
-    }
+    window.open(`/api/downloads/${item.id}/stream`, '_blank');
   };
 
   return (

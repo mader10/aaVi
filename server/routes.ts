@@ -49,8 +49,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Start download for specific item
-  app.post("/api/downloads/:id/start", async (req, res) => {
+  // Stream download directly to user
+  app.get("/api/downloads/:id/stream", async (req, res) => {
     try {
       const { id } = req.params;
       const item = await storage.getDownloadItem(id);
@@ -59,11 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Download item not found" });
       }
 
-      if (item.status !== "pending") {
-        return res.status(400).json({ message: "Download already processed" });
-      }
-
-      // First get video metadata
+      // Get video metadata first
       const metadataProcess = spawn('yt-dlp', [
         '--dump-json',
         '--no-warnings',
@@ -79,117 +75,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       metadataProcess.on('close', async (code) => {
+        let filename = 'download';
+        let contentType = 'application/octet-stream';
+        
         if (code === 0 && metadataJson.trim()) {
           try {
             const metadata = JSON.parse(metadataJson.trim());
-            await storage.updateDownloadItem(id, {
-              title: metadata.title || metadata.fulltitle || (item.downloadType === "audio" ? "Social Media Audio" : "Social Media Video"),
-              duration: metadata.duration_string || (metadata.duration ? `${Math.floor(metadata.duration / 60)}:${(metadata.duration % 60).toString().padStart(2, '0')}` : null),
-              quality: item.downloadType === "audio" ? "192K MP3" : (metadata.height ? `${metadata.height}p` : null),
-            });
+            filename = (metadata.title || 'download').replace(/[^a-zA-Z0-9]/g, '_');
           } catch (e) {
-            console.log('Could not parse metadata, continuing with download...');
+            console.log('Could not parse metadata');
           }
         }
 
-        // Update status to downloading
-        await storage.updateDownloadItem(id, { status: "downloading", progress: 0 });
-
-        // Start actual download
-        const fileName = `${id}.%(ext)s`;
-        const outputPath = path.join(downloadsDir, fileName);
+        // Set appropriate headers
+        const ext = item.downloadType === 'audio' ? 'mp3' : 'mp4';
+        contentType = item.downloadType === 'audio' ? 'audio/mpeg' : 'video/mp4';
         
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}.${ext}"`);
+        res.setHeader('Transfer-Encoding', 'chunked');
+
+        // Stream download directly to response
         const ytdlpArgs = [
           '--no-warnings',
-          '--newline',
           '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
           '--referer', 'https://www.facebook.com/',
-          '--output', outputPath,
+          '--output', '-',
           '--no-check-certificates'
         ];
 
-        // Add audio-specific or video-specific options
         if (item.downloadType === "audio") {
-          ytdlpArgs.push('--extract-audio');
-          ytdlpArgs.push('--audio-format', 'mp3');
-          ytdlpArgs.push('--audio-quality', '192K');
-          ytdlpArgs.push('--prefer-ffmpeg');
+          ytdlpArgs.push('--extract-audio', '--audio-format', 'mp3', '--audio-quality', '192K');
         } else {
-          // Prioritize high quality video formats - allows up to 1080p, falls back gracefully
-          ytdlpArgs.push('--format', 'best[height<=1080]/best[height<=720]/best');
+          ytdlpArgs.push('--format', 'best[height<=1080][vbr>2000]/best[height<=1080][vbr>1500]/best[height<=1080]/best[vbr>1000]/best');
         }
 
         ytdlpArgs.push(item.url);
         
         const ytdlp = spawn('yt-dlp', ytdlpArgs);
 
-        ytdlp.stdout.on('data', async (data) => {
-        const output = data.toString();
-        console.log('yt-dlp output:', output);
+        ytdlp.stdout.pipe(res);
         
-        // Parse download progress
-        if (output.includes('[download]') && output.includes('%')) {
-          const progressMatch = output.match(/(\d+\.?\d*)%/);
-          const speedMatch = output.match(/(\d+\.?\d*[KMG]?iB\/s)/);
-          const sizeMatch = output.match(/(\d+\.?\d*[KMG]?iB)/);
-          
-          if (progressMatch) {
-            const progress = Math.round(parseFloat(progressMatch[1]));
-            const downloadSpeed = speedMatch ? speedMatch[1] : undefined;
-            const currentSize = sizeMatch ? sizeMatch[1] : undefined;
-            
-            await storage.updateDownloadItem(id, { 
-              progress,
-              downloadSpeed: downloadSpeed || item.downloadSpeed,
-              fileSize: currentSize || item.fileSize
-            });
-          }
-        }
-        
-        // Parse video information from download output
-        if (output.includes('[info]')) {
-          // Additional info parsing can be added here if needed
-        }
+        ytdlp.stderr.on('data', (data) => {
+          console.error(`Stream error: ${data}`);
         });
 
-        ytdlp.stderr.on('data', async (data) => {
-        console.error(`yt-dlp error: ${data}`);
-        await storage.updateDownloadItem(id, {
-          status: "failed",
-          errorMessage: data.toString().slice(0, 200)
-        });
+        ytdlp.on('close', (code) => {
+          if (code !== 0) {
+            if (!res.headersSent) {
+              res.status(500).json({ message: 'Download failed' });
+            }
+          }
+          res.end();
         });
 
-        ytdlp.on('close', async (code) => {
-        if (code === 0) {
-          // Find the actual downloaded file
-          const files = fs.readdirSync(downloadsDir).filter(f => f.startsWith(id));
-          const downloadedFile = files[0];
-          
-          if (downloadedFile) {
-            await storage.updateDownloadItem(id, {
-              status: "ready",
-              progress: 100,
-              fileName: downloadedFile
-            });
-          } else {
-            await storage.updateDownloadItem(id, {
-              status: "failed",
-              errorMessage: "File not found after download"
-            });
-          }
-        } else {
-          await storage.updateDownloadItem(id, {
-            status: "failed",
-            errorMessage: `Download failed with code ${code}`
-          });
+        ytdlp.on('error', (err) => {
+          console.error('Stream process error:', err);
+          if (!res.headersSent) {
+            res.status(500).json({ message: 'Stream failed' });
           }
         });
       });
 
-      res.json({ message: "Download started" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to start download" });
+      res.status(500).json({ message: "Failed to stream download" });
+    }
+  });
+
+  // Start download (now just updates status)
+  app.post("/api/downloads/:id/start", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const item = await storage.getDownloadItem(id);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Download item not found" });
+      }
+
+      await storage.updateDownloadItem(id, { status: "ready" });
+      res.json({ message: "Download ready for streaming" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to prepare download" });
     }
   });
 
@@ -238,21 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve downloaded files
-  app.get("/downloads/:filename", (req, res) => {
-    try {
-      const { filename } = req.params;
-      const filePath = path.join(downloadsDir, filename);
-      
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ message: "File not found" });
-      }
 
-      res.download(filePath);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to serve file" });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;

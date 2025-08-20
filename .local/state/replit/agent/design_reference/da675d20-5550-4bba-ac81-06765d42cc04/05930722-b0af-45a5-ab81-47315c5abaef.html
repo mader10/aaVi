@@ -1,0 +1,497 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Bulk Video Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#6B7280',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        error: '#EF4444',
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="bg-gray-50 font-inter">
+    <!-- @COMPONENT: AppHeader -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fab fa-facebook-f text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-semibold text-gray-900">Facebook Video Downloader</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">Bulk Download Tool</span>
+                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-download text-gray-600 text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: AppHeader -->
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- @COMPONENT: DisclaimerBanner -->
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8">
+            <div class="flex items-start space-x-3">
+                <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5"></i>
+                <div>
+                    <h3 class="text-sm font-medium text-amber-800">Important Notice</h3>
+                    <p class="text-sm text-amber-700 mt-1">
+                        This tool is for personal and educational use only. Please respect Facebook's Terms of Service and copyright laws. 
+                        Do not download or redistribute copyrighted or private content without permission.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: DisclaimerBanner -->
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- @COMPONENT: UrlInputSection -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Add Facebook Videos</h2>
+                    
+                    <!-- A modern interface showing video URL input field with Facebook branding -->
+                    <div class="mb-6">
+                        <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=300" 
+                             alt="Social media video interface" 
+                             class="w-full h-32 object-cover rounded-lg mb-4" data-mock-image="true" />
+                    </div>
+
+                    <form data-event="submit:handleAddUrl" class="space-y-4">
+                        <div>
+                            <label for="videoUrl" class="block text-sm font-medium text-gray-700 mb-2">
+                                Facebook Video URL
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="url" 
+                                    id="videoUrl" 
+                                    data-bind="urlInput"
+                                    placeholder="https://www.facebook.com/video/..." 
+                                    class="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                    data-mock="true"
+                                />
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                    <i class="fab fa-facebook text-primary"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Supports various Facebook video URL formats
+                            </p>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            data-event="click:addUrlToQueue"
+                            class="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-600 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors flex items-center justify-center space-x-2"
+                        >
+                            <i class="fas fa-plus"></i>
+                            <span>Add to Download Queue</span>
+                        </button>
+                    </form>
+
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">Videos in queue:</span>
+                            <span class="font-medium text-gray-900" data-bind="queueCount">3</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm mt-2">
+                            <span class="text-gray-600">Completed:</span>
+                            <span class="font-medium text-success" data-bind="completedCount">1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: UrlInputSection -->
+
+            <!-- @COMPONENT: DownloadQueueSection -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-gray-900">Download Queue</h2>
+                            <button 
+                                data-event="click:downloadAll"
+                                class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center space-x-2"
+                                data-implementation="Should trigger bulk download for all pending items"
+                            >
+                                <i class="fas fa-download"></i>
+                                <span>Download All</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="divide-y divide-gray-200">
+                        <!-- @MAP: downloadQueue.map(item => ( -->
+                        
+                        <!-- Queue Item 1 - Completed -->
+                        <div class="p-6 hover:bg-gray-50 transition-colors" data-mock="true">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <!-- Tech dashboard visualization showing download progress -->
+                                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=80&h=80" 
+                                         alt="Video thumbnail placeholder" 
+                                         class="w-16 h-16 rounded-lg object-cover" data-mock-image="true" />
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <p class="text-sm font-medium text-gray-900 truncate" data-bind="item.title">
+                                            Amazing Travel Video - Costa Rica Adventure
+                                        </p>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            Ready
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 truncate mb-2" data-bind="item.url">
+                                        https://www.facebook.com/video/1234567890
+                                    </p>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-4 text-xs text-gray-500">
+                                            <span data-bind="item.fileSize">45.2 MB</span>
+                                            <span data-bind="item.duration">2:34</span>
+                                            <span data-bind="item.quality">720p</span>
+                                        </div>
+                                        <button 
+                                            data-event="click:downloadVideo"
+                                            class="bg-success text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-green-600 transition-colors flex items-center space-x-1"
+                                        >
+                                            <i class="fas fa-download"></i>
+                                            <span>Download MP4</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Queue Item 2 - Downloading -->
+                        <div class="p-6 hover:bg-gray-50 transition-colors" data-mock="true">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <!-- Digital download progress visualization -->
+                                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=80&h=80" 
+                                         alt="Download progress visualization" 
+                                         class="w-16 h-16 rounded-lg object-cover" data-mock-image="true" />
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <p class="text-sm font-medium text-gray-900 truncate" data-bind="item.title">
+                                            Cooking Tutorial - Italian Pasta
+                                        </p>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <i class="fas fa-spinner fa-spin mr-1"></i>
+                                            Downloading
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 truncate mb-2" data-bind="item.url">
+                                        https://www.facebook.com/video/9876543210
+                                    </p>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between text-xs text-gray-500">
+                                            <span>Progress: <span data-bind="item.progress">67%</span></span>
+                                            <span data-bind="item.downloadSpeed">2.3 MB/s</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 67%" data-bind="item.progressWidth"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Queue Item 3 - Pending -->
+                        <div class="p-6 hover:bg-gray-50 transition-colors" data-mock="true">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <!-- Technology interface showing pending state -->
+                                    <img src="https://pixabay.com/get/g2763e60e659601408193c5e3997137037ce931bf750f890bd75aa74361546adc0e7e9a108b6b4dd80573046be263d29d43d6d612cfa4ee05fa9b1acf5e5e4db1_1280.jpg" 
+                                         alt="Pending download interface" 
+                                         class="w-16 h-16 rounded-lg object-cover" data-mock-image="true" />
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <p class="text-sm font-medium text-gray-900 truncate" data-bind="item.title">
+                                            Music Performance Live Stream
+                                        </p>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            Pending
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 truncate mb-2" data-bind="item.url">
+                                        https://www.facebook.com/video/5555666677
+                                    </p>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500">Waiting in queue...</span>
+                                        <div class="flex items-center space-x-2">
+                                            <button 
+                                                data-event="click:startDownload"
+                                                class="bg-primary text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-blue-600 transition-colors"
+                                            >
+                                                Start
+                                            </button>
+                                            <button 
+                                                data-event="click:removeFromQueue"
+                                                class="text-gray-400 hover:text-red-500 transition-colors"
+                                            >
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Queue Item 4 - Error State -->
+                        <div class="p-6 hover:bg-gray-50 transition-colors" data-mock="true">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="w-16 h-16 rounded-lg bg-red-100 flex items-center justify-center">
+                                        <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <p class="text-sm font-medium text-gray-900 truncate" data-bind="item.title">
+                                            Private Video (Access Denied)
+                                        </p>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <i class="fas fa-times-circle mr-1"></i>
+                                            Failed
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 truncate mb-2" data-bind="item.url">
+                                        https://www.facebook.com/video/8888999900
+                                    </p>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-red-600" data-bind="item.errorMessage">Video is private or unavailable</span>
+                                        <div class="flex items-center space-x-2">
+                                            <button 
+                                                data-event="click:retryDownload"
+                                                class="bg-gray-500 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-gray-600 transition-colors"
+                                            >
+                                                Retry
+                                            </button>
+                                            <button 
+                                                data-event="click:removeFromQueue"
+                                                class="text-gray-400 hover:text-red-500 transition-colors"
+                                            >
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- @END_MAP )) -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="p-12 text-center" style="display: none;" data-show-when="queueEmpty">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-video text-gray-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No videos in queue</h3>
+                        <p class="text-gray-500 mb-4">Add Facebook video URLs to start downloading</p>
+                    </div>
+                </div>
+
+                <!-- @COMPONENT: DownloadStats -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clock text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900" data-bind="stats.pending">2</p>
+                                <p class="text-sm text-gray-500">Pending</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-check text-success"></i>
+                                </div>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900" data-bind="stats.completed">1</p>
+                                <p class="text-sm text-gray-500">Completed</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-download text-warning"></i>
+                                </div>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900" data-bind="stats.totalSize">45.2 MB</p>
+                                <p class="text-sm text-gray-500">Total Size</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: DownloadStats -->
+            </div>
+            <!-- @END_COMPONENT: DownloadQueueSection -->
+        </div>
+
+        <!-- @COMPONENT: TechnicalInfo -->
+        <div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Technical Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900 mb-2">Supported URL Formats</h4>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>• facebook.com/video/[video-id]</li>
+                        <li>• facebook.com/[user]/videos/[video-id]</li>
+                        <li>• facebook.com/watch/?v=[video-id]</li>
+                        <li>• fb.watch/[shortened-url]</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900 mb-2">Download Features</h4>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>• Automatic quality detection</li>
+                        <li>• Progress tracking & speed monitoring</li>
+                        <li>• Bulk download support</li>
+                        <li>• Error handling & retry mechanism</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: TechnicalInfo -->
+    </main>
+
+    <!-- @COMPONENT: Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <p class="text-sm text-gray-500">
+                    Facebook Bulk Video Downloader - For educational purposes only
+                </p>
+                <div class="flex items-center space-x-4">
+                    <span class="text-xs text-gray-400">Powered by yt-dlp</span>
+                    <div class="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
+                        <i class="fas fa-code text-gray-500 text-xs"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- @END_COMPONENT: Footer -->
+
+    <script>
+        (function() {
+            // TODO: Implement business logic, API calls, and state management
+            
+            // Mock interaction handlers for demonstration
+            const urlInput = document.getElementById('videoUrl');
+            const addButton = document.querySelector('[data-event="click:addUrlToQueue"]');
+            const downloadAllButton = document.querySelector('[data-event="click:downloadAll"]');
+            
+            // URL validation
+            function isValidFacebookUrl(url) {
+                const fbUrlPattern = /^https?:\/\/(www\.)?(facebook\.com|fb\.watch)/;
+                return fbUrlPattern.test(url);
+            }
+            
+            // Add URL to queue handler
+            if (addButton) {
+                addButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = urlInput.value.trim();
+                    
+                    if (!url) {
+                        alert('Please enter a Facebook video URL');
+                        return;
+                    }
+                    
+                    if (!isValidFacebookUrl(url)) {
+                        alert('Please enter a valid Facebook video URL');
+                        return;
+                    }
+                    
+                    // TODO: Add URL to download queue via API call
+                    console.log('Adding URL to queue:', url);
+                    urlInput.value = '';
+                });
+            }
+            
+            // Download all handler
+            if (downloadAllButton) {
+                downloadAllButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // TODO: Trigger bulk download API call
+                    console.log('Starting bulk download...');
+                });
+            }
+            
+            // Individual download handlers
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('[data-event="click:downloadVideo"]') || 
+                    e.target.closest('[data-event="click:downloadVideo"]')) {
+                    e.preventDefault();
+                    // TODO: Trigger individual video download
+                    console.log('Downloading individual video...');
+                }
+                
+                if (e.target.matches('[data-event="click:startDownload"]') || 
+                    e.target.closest('[data-event="click:startDownload"]')) {
+                    e.preventDefault();
+                    // TODO: Start pending download
+                    console.log('Starting pending download...');
+                }
+                
+                if (e.target.matches('[data-event="click:removeFromQueue"]') || 
+                    e.target.closest('[data-event="click:removeFromQueue"]')) {
+                    e.preventDefault();
+                    // TODO: Remove item from queue
+                    console.log('Removing from queue...');
+                }
+                
+                if (e.target.matches('[data-event="click:retryDownload"]') || 
+                    e.target.closest('[data-event="click:retryDownload"]')) {
+                    e.preventDefault();
+                    // TODO: Retry failed download
+                    console.log('Retrying download...');
+                }
+            });
+            
+            // Auto-focus URL input
+            if (urlInput) {
+                urlInput.focus();
+            }
+        })();
+    </script>
+</body>
+</html>
