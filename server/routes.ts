@@ -63,30 +63,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Download already processed" });
       }
 
-      // Update status to downloading
-      await storage.updateDownloadItem(id, { status: "downloading", progress: 0 });
-
-      // Start yt-dlp process
-      const fileName = `${id}.%(ext)s`;
-      const outputPath = path.join(downloadsDir, fileName);
-      
-      const ytdlp = spawn('yt-dlp', [
+      // First get video metadata
+      const metadataProcess = spawn('yt-dlp', [
+        '--dump-json',
         '--no-warnings',
-        '--newline',
         '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         '--referer', 'https://www.facebook.com/',
-        '--output', outputPath,
-        '--format', 'best[ext=mp4]/best',
         '--no-check-certificates',
         item.url
       ]);
 
-      let title = '';
-      let duration = '';
-      let fileSize = '';
-      let quality = '';
+      let metadataJson = '';
+      metadataProcess.stdout.on('data', (data) => {
+        metadataJson += data.toString();
+      });
 
-      ytdlp.stdout.on('data', async (data) => {
+      metadataProcess.on('close', async (code) => {
+        if (code === 0 && metadataJson.trim()) {
+          try {
+            const metadata = JSON.parse(metadataJson.trim());
+            await storage.updateDownloadItem(id, {
+              title: metadata.title || metadata.fulltitle || 'Facebook Video',
+              duration: metadata.duration_string || (metadata.duration ? `${Math.floor(metadata.duration / 60)}:${(metadata.duration % 60).toString().padStart(2, '0')}` : null),
+              quality: metadata.height ? `${metadata.height}p` : null,
+            });
+          } catch (e) {
+            console.log('Could not parse metadata, continuing with download...');
+          }
+        }
+
+        // Update status to downloading
+        await storage.updateDownloadItem(id, { status: "downloading", progress: 0 });
+
+        // Start actual download
+        const fileName = `${id}.%(ext)s`;
+        const outputPath = path.join(downloadsDir, fileName);
+        
+        const ytdlp = spawn('yt-dlp', [
+          '--no-warnings',
+          '--newline',
+          '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          '--referer', 'https://www.facebook.com/',
+          '--output', outputPath,
+          '--format', 'best[ext=mp4]/best',
+          '--no-check-certificates',
+          item.url
+        ]);
+
+        ytdlp.stdout.on('data', async (data) => {
         const output = data.toString();
         console.log('yt-dlp output:', output);
         
@@ -109,25 +133,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // Extract video title from yt-dlp info messages
-        if (output.includes('[info]') && !title) {
-          const titleMatch = output.match(/\[info\]\s+(.+?):\s+Downloading/);
-          if (titleMatch) {
-            title = titleMatch[1];
-            await storage.updateDownloadItem(id, { title });
-          }
+        // Parse video information from download output
+        if (output.includes('[info]')) {
+          // Additional info parsing can be added here if needed
         }
-      });
+        });
 
-      ytdlp.stderr.on('data', async (data) => {
+        ytdlp.stderr.on('data', async (data) => {
         console.error(`yt-dlp error: ${data}`);
         await storage.updateDownloadItem(id, {
           status: "failed",
           errorMessage: data.toString().slice(0, 200)
         });
-      });
+        });
 
-      ytdlp.on('close', async (code) => {
+        ytdlp.on('close', async (code) => {
         if (code === 0) {
           // Find the actual downloaded file
           const files = fs.readdirSync(downloadsDir).filter(f => f.startsWith(id));
@@ -150,7 +170,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: "failed",
             errorMessage: `Download failed with code ${code}`
           });
-        }
+          }
+        });
       });
 
       res.json({ message: "Download started" });
