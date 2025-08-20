@@ -4,10 +4,7 @@ services:
     env: node
     buildCommand: |
       npm install
-      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /opt/render/project/src/yt-dlp
-      chmod +x /opt/render/project/src/yt-dlp
+      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o yt-dlp
+      chmod +x yt-dlp
       npm run build
-    startCommand: npm start
-    envVars:
-      - key: PATH
-        value: /opt/render/project/src:$PATH
+    startCommand: PATH=.:$PATH npm start
