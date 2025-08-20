@@ -98,9 +98,10 @@ export default function Home() {
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-2">Download Features</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Automatic quality detection</li>
+                <li>• <strong>Video:</strong> MP4 format with quality detection</li>
+                <li>• <strong>Audio:</strong> MP3 extraction (192K quality)</li>
                 <li>• Progress tracking & speed monitoring</li>
-                <li>• Bulk download support</li>
+                <li>• Bulk download support for mixed content</li>
                 <li>• Error handling & retry mechanism</li>
               </ul>
             </div>

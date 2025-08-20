@@ -10,7 +10,9 @@ import {
   Play, 
   Trash2, 
   RefreshCw,
-  TriangleAlert 
+  TriangleAlert,
+  Music,
+  Video 
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -115,17 +117,30 @@ export function QueueItem({ item }: QueueItemProps) {
               <TriangleAlert className="text-red-500" size={24} />
             </div>
           ) : (
-            <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center">
-              <Download className="text-gray-400" size={20} />
+            <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
+              item.downloadType === "audio" ? "bg-purple-100" : "bg-gray-100"
+            }`}>
+              {item.downloadType === "audio" ? (
+                <Music className="text-purple-600" size={20} />
+              ) : (
+                <Download className="text-gray-400" size={20} />
+              )}
             </div>
           )}
         </div>
         
         <div className="flex-grow min-w-0">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {item.title || "Social Media Video"}
-            </p>
+            <div className="flex items-center space-x-2">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {item.title || `Social Media ${item.downloadType === "audio" ? "Audio" : "Video"}`}
+              </p>
+              {item.downloadType === "audio" ? (
+                <Music className="text-purple-600 flex-shrink-0" size={14} />
+              ) : (
+                <Video className="text-blue-600 flex-shrink-0" size={14} />
+              )}
+            </div>
             {getStatusBadge()}
           </div>
           
@@ -164,7 +179,7 @@ export function QueueItem({ item }: QueueItemProps) {
                   className="bg-success text-white hover:bg-green-600 transition-colors"
                 >
                   <Download size={12} className="mr-1" />
-                  Download MP4
+                  Download {item.downloadType === "audio" ? "MP3" : "MP4"}
                 </Button>
               )}
               

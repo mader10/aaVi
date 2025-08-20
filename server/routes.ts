@@ -83,9 +83,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             const metadata = JSON.parse(metadataJson.trim());
             await storage.updateDownloadItem(id, {
-              title: metadata.title || metadata.fulltitle || 'Facebook Video',
+              title: metadata.title || metadata.fulltitle || (item.downloadType === "audio" ? "Social Media Audio" : "Social Media Video"),
               duration: metadata.duration_string || (metadata.duration ? `${Math.floor(metadata.duration / 60)}:${(metadata.duration % 60).toString().padStart(2, '0')}` : null),
-              quality: metadata.height ? `${metadata.height}p` : null,
+              quality: item.downloadType === "audio" ? "192K MP3" : (metadata.height ? `${metadata.height}p` : null),
             });
           } catch (e) {
             console.log('Could not parse metadata, continuing with download...');
@@ -99,16 +99,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const fileName = `${id}.%(ext)s`;
         const outputPath = path.join(downloadsDir, fileName);
         
-        const ytdlp = spawn('yt-dlp', [
+        const ytdlpArgs = [
           '--no-warnings',
           '--newline',
           '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
           '--referer', 'https://www.facebook.com/',
           '--output', outputPath,
-          '--format', 'best[ext=mp4]/best',
-          '--no-check-certificates',
-          item.url
-        ]);
+          '--no-check-certificates'
+        ];
+
+        // Add audio-specific or video-specific options
+        if (item.downloadType === "audio") {
+          ytdlpArgs.push('--extract-audio');
+          ytdlpArgs.push('--audio-format', 'mp3');
+          ytdlpArgs.push('--audio-quality', '192K');
+        } else {
+          ytdlpArgs.push('--format', 'best[ext=mp4]/best');
+        }
+
+        ytdlpArgs.push(item.url);
+        
+        const ytdlp = spawn('yt-dlp', ytdlpArgs);
 
         ytdlp.stdout.on('data', async (data) => {
         const output = data.toString();

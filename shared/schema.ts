@@ -7,6 +7,7 @@ export const downloadItems = pgTable("download_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   url: text("url").notNull(),
   title: text("title"),
+  downloadType: text("download_type").notNull().default("video"), // video, audio
   status: text("status").notNull().default("pending"), // pending, downloading, ready, failed
   progress: integer("progress").default(0), // 0-100
   fileSize: text("file_size"),
@@ -21,6 +22,7 @@ export const downloadItems = pgTable("download_items", {
 export const insertDownloadItemSchema = createInsertSchema(downloadItems).pick({
   url: true,
   title: true,
+  downloadType: true,
   status: true,
   progress: true,
   fileSize: true,

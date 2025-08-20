@@ -54,6 +54,7 @@ export class MemStorage implements IStorage {
     const item: DownloadItem = { 
       ...insertItem,
       title: insertItem.title ?? null,
+      downloadType: insertItem.downloadType ?? "video",
       status: insertItem.status ?? "pending",
       progress: insertItem.progress ?? null,
       fileSize: insertItem.fileSize ?? null,
