@@ -72,14 +72,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const ytdlp = spawn('yt-dlp', [
         '--no-warnings',
-        '--extract-flat',
-        '--print', 'title',
-        '--print', 'duration_string',
-        '--print', 'filesize_approx',
-        '--print', 'height',
+        '--newline',
         '--output', outputPath,
         '--format', 'best[ext=mp4]',
-        '--progress',
         item.url
       ]);
 
@@ -90,48 +85,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       ytdlp.stdout.on('data', async (data) => {
         const output = data.toString();
-        const lines = output.trim().split('\n');
+        console.log('yt-dlp output:', output);
         
-        // Parse metadata from yt-dlp output
-        if (!title && lines[0] && !lines[0].includes('[download]')) {
-          title = lines[0];
-        }
-        if (!duration && lines[1] && !lines[1].includes('[download]')) {
-          duration = lines[1];
-        }
-        if (!fileSize && lines[2] && !lines[2].includes('[download]')) {
-          const size = parseInt(lines[2]);
-          if (!isNaN(size)) {
-            fileSize = (size / (1024 * 1024)).toFixed(1) + ' MB';
-          }
-        }
-        if (!quality && lines[3] && !lines[3].includes('[download]')) {
-          quality = lines[3] + 'p';
-        }
-
-        // Update item with metadata
-        if (title || duration || fileSize || quality) {
-          await storage.updateDownloadItem(id, {
-            title: title || item.title,
-            duration: duration || item.duration,
-            fileSize: fileSize || item.fileSize,
-            quality: quality || item.quality
-          });
-        }
-
-        // Parse progress
+        // Parse download progress
         if (output.includes('[download]') && output.includes('%')) {
           const progressMatch = output.match(/(\d+\.?\d*)%/);
-          const speedMatch = output.match(/(\d+\.?\d*\w+\/s)/);
+          const speedMatch = output.match(/(\d+\.?\d*[KMG]?iB\/s)/);
+          const sizeMatch = output.match(/(\d+\.?\d*[KMG]?iB)/);
           
           if (progressMatch) {
             const progress = Math.round(parseFloat(progressMatch[1]));
             const downloadSpeed = speedMatch ? speedMatch[1] : undefined;
+            const currentSize = sizeMatch ? sizeMatch[1] : undefined;
             
             await storage.updateDownloadItem(id, { 
               progress,
-              downloadSpeed: downloadSpeed || item.downloadSpeed
+              downloadSpeed: downloadSpeed || item.downloadSpeed,
+              fileSize: currentSize || item.fileSize
             });
+          }
+        }
+        
+        // Extract video title from yt-dlp info messages
+        if (output.includes('[info]') && !title) {
+          const titleMatch = output.match(/\[info\]\s+(.+?):\s+Downloading/);
+          if (titleMatch) {
+            title = titleMatch[1];
+            await storage.updateDownloadItem(id, { title });
           }
         }
       });
