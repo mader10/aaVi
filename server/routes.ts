@@ -73,8 +73,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ytdlp = spawn('yt-dlp', [
         '--no-warnings',
         '--newline',
+        '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        '--referer', 'https://www.facebook.com/',
         '--output', outputPath,
-        '--format', 'best[ext=mp4]',
+        '--format', 'best[ext=mp4]/best',
+        '--no-check-certificates',
         item.url
       ]);
 
