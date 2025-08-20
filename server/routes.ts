@@ -32,10 +32,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertDownloadItemSchema.parse(req.body);
       
-      // Validate Facebook URL (including shared URLs like facebook.com/share/r/...)
-      const fbUrlPattern = /^https?:\/\/(www\.)?(facebook\.com|fb\.watch)/;
-      if (!fbUrlPattern.test(validatedData.url)) {
-        return res.status(400).json({ message: "Invalid Facebook URL" });
+      // Validate social media URL (Facebook, Instagram, YouTube)
+      const socialMediaPattern = /^https?:\/\/(www\.)?(facebook\.com|fb\.watch|instagram\.com|youtube\.com|youtu\.be)/;
+      if (!socialMediaPattern.test(validatedData.url)) {
+        return res.status(400).json({ message: "Invalid social media URL" });
       }
 
       const item = await storage.createDownloadItem({

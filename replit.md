@@ -1,8 +1,8 @@
-# Facebook Bulk Video Downloader
+# Social Media Video Downloader
 
 ## Overview
 
-A full-stack web application for downloading Facebook videos in bulk. Built with React frontend and Node.js/Express backend, this tool allows users to add multiple Facebook video URLs to a queue and download them as MP4 files. The application features a modern UI with real-time progress tracking and status updates for each download.
+A full-stack web application for downloading videos from multiple social media platforms including Facebook, Instagram, and YouTube. Built with React frontend and Node.js/Express backend, this tool allows users to add multiple video URLs to a queue and download them as MP4 files. The application features a modern UI with real-time progress tracking, video metadata extraction, and status updates for each download.
 
 ## User Preferences
 
@@ -46,6 +46,12 @@ The application is designed with database-ready schemas using Drizzle ORM, makin
 - **File Serving**: Express static file serving for completed downloads
 - **Organization**: Files stored with unique identifiers to prevent conflicts
 
+### Supported Platforms
+
+- **Facebook**: All video formats including shared links (facebook.com/share/r/...)
+- **Instagram**: Posts, Reels, Stories, IGTV content
+- **YouTube**: Videos, Shorts, livestreams, music content
+
 ## External Dependencies
 
 ### Core Framework Dependencies
@@ -61,7 +67,8 @@ The application is designed with database-ready schemas using Drizzle ORM, makin
 - **Utilities**: Class Variance Authority for component variants, clsx for conditional classes
 
 ### Development Tools
-- **Video Processing**: yt-dlp (external binary) called via Node.js child_process
+- **Video Processing**: yt-dlp latest version (2025.08.20) with enhanced Facebook, Instagram, and YouTube support
+- **Metadata Extraction**: JSON-based video information retrieval for titles, duration, and quality
 - **Form Management**: React Hook Form with Hookform resolvers
 - **Date Handling**: date-fns for date manipulation
 - **Command Interface**: cmdk for command palette functionality

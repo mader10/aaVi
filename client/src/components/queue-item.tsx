@@ -124,7 +124,7 @@ export function QueueItem({ item }: QueueItemProps) {
         <div className="flex-grow min-w-0">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-gray-900 truncate">
-              {item.title || "Facebook Video"}
+              {item.title || "Social Media Video"}
             </p>
             {getStatusBadge()}
           </div>

@@ -2,7 +2,7 @@ import { UrlInput } from "@/components/url-input";
 import { DownloadQueue } from "@/components/download-queue";
 import { DownloadStats } from "@/components/download-stats";
 import { useDownloads } from "@/hooks/use-downloads";
-import { Facebook, Download, TriangleAlert, Code } from "lucide-react";
+import { Video, Download, TriangleAlert, Code } from "lucide-react";
 
 export default function Home() {
   const { downloads, isLoading } = useDownloads();
@@ -22,12 +22,12 @@ export default function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Facebook className="text-white" size={16} />
+                <Video className="text-white" size={16} />
               </div>
-              <h1 className="text-xl font-semibold text-gray-900">Facebook Video Downloader</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Social Media Video Downloader</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Bulk Download Tool</span>
+              <span className="text-sm text-gray-500">Multi-Platform Downloader</span>
               <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                 <Download className="text-gray-600" size={16} />
               </div>
@@ -44,7 +44,7 @@ export default function Home() {
             <div>
               <h3 className="text-sm font-medium text-amber-800">Important Notice</h3>
               <p className="text-sm text-amber-700 mt-1">
-                This tool is for personal and educational use only. Please respect Facebook's Terms of Service and copyright laws. 
+                This tool is for personal and educational use only. Please respect each platform's Terms of Service and copyright laws. 
                 Do not download or redistribute copyrighted or private content without permission.
               </p>
             </div>
@@ -87,13 +87,12 @@ export default function Home() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Technical Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Supported URL Formats</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Supported Platforms</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• facebook.com/video/[video-id]</li>
-                <li>• facebook.com/[user]/videos/[video-id]</li>
-                <li>• facebook.com/watch/?v=[video-id]</li>
-                <li>• facebook.com/share/r/[shared-id]</li>
-                <li>• fb.watch/[shortened-url]</li>
+                <li>• <strong>Facebook:</strong> All video formats and shared links</li>
+                <li>• <strong>Instagram:</strong> Posts, Reels, Stories, IGTV</li>
+                <li>• <strong>YouTube:</strong> Videos, Shorts, livestreams</li>
+                <li>• <strong>YouTube:</strong> Music and premium content</li>
               </ul>
             </div>
             <div>
@@ -114,7 +113,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">
-              Facebook Bulk Video Downloader - For educational purposes only
+              Social Media Video Downloader - For educational purposes only
             </p>
             <div className="flex items-center space-x-4">
               <span className="text-xs text-gray-400">Powered by yt-dlp</span>

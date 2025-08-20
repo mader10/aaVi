@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Facebook } from "lucide-react";
+import { Plus, Video } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -49,11 +49,11 @@ export function UrlInput() {
       return;
     }
 
-    const fbUrlPattern = /^https?:\/\/(www\.)?(facebook\.com|fb\.watch)/;
-    if (!fbUrlPattern.test(url)) {
+    const socialMediaPattern = /^https?:\/\/(www\.)?(facebook\.com|fb\.watch|instagram\.com|youtube\.com|youtu\.be)/;
+    if (!socialMediaPattern.test(url)) {
       toast({
-        title: "Invalid Facebook URL",
-        description: "Please enter a valid Facebook video URL.",
+        title: "Invalid URL",
+        description: "Please enter a valid Facebook, Instagram, or YouTube video URL.",
         variant: "destructive",
       });
       return;
@@ -65,12 +65,12 @@ export function UrlInput() {
   return (
     <Card className="bg-white shadow-sm border border-gray-200">
       <CardContent className="p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Add Facebook Videos</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Add Social Media Videos</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700 mb-2">
-              Facebook Video URL
+              Video URL
             </Label>
             <div className="relative">
               <Input
@@ -78,15 +78,15 @@ export function UrlInput() {
                 id="videoUrl"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://www.facebook.com/share/r/... or facebook.com/watch/?v=..."
+                placeholder="Facebook, Instagram, or YouTube video URL"
                 className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors pr-10"
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <Facebook className="text-primary" size={16} />
+                <Video className="text-primary" size={16} />
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Supports all Facebook video URL formats including shared links
+              Supports Facebook, Instagram, and YouTube video formats
             </p>
           </div>
 
@@ -96,7 +96,7 @@ export function UrlInput() {
             className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-600 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors flex items-center justify-center space-x-2"
           >
             <Plus size={16} />
-            <span>{addUrlMutation.isPending ? "Adding..." : "Add to Download Queue"}</span>
+            <span>{addUrlMutation.isPending ? "Adding..." : "Add to Queue"}</span>
           </Button>
         </form>
       </CardContent>
