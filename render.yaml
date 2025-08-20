@@ -2,9 +2,5 @@ services:
   - type: web
     name: aavideo
     env: node
-    buildCommand: |
-      npm install
-      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o yt-dlp
-      chmod +x yt-dlp
-      npm run build
+    buildCommand: npm install && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o yt-dlp && chmod +x yt-dlp && npm run build
     startCommand: PATH=.:$PATH npm start
