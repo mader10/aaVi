@@ -113,8 +113,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ytdlpArgs.push('--extract-audio');
           ytdlpArgs.push('--audio-format', 'mp3');
           ytdlpArgs.push('--audio-quality', '192K');
+          ytdlpArgs.push('--prefer-ffmpeg');
         } else {
-          ytdlpArgs.push('--format', 'best[ext=mp4]/best');
+          // Prioritize high quality video formats - allows up to 1080p, falls back gracefully
+          ytdlpArgs.push('--format', 'best[height<=1080]/best[height<=720]/best');
         }
 
         ytdlpArgs.push(item.url);
