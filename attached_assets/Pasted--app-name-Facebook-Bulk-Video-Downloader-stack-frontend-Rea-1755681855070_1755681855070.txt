@@ -1,0 +1,49 @@
+{
+  "app": {
+    "name": "Facebook Bulk Video Downloader",
+    "stack": {
+      "frontend": "React (Vite or Next.js), TailwindCSS",
+      "backend": "Node.js (Express)",
+      "downloader": "yt-dlp via child_process",
+      "storage": "Local /downloads folder (or S3 for scale)"
+    },
+    "workflow": {
+      "1. UI": {
+        "components": [
+          "Input field for Facebook video/share URLs",
+          "‘+’ button to add multiple links to a list",
+          "List view showing all added URLs",
+          "‘Download All’ button",
+          "Per-video status: [Pending → Downloading → Ready]",
+          "When Ready: show [Download MP4] button"
+        ]
+      },
+      "2. API Routes": {
+        "POST /api/download": "Accepts a FB URL → runs yt-dlp → saves video as /downloads/{video_id}.mp4 → returns JSON {status, filename, downloadUrl}",
+        "GET /api/videos": "Lists all downloaded videos",
+        "GET /downloads/:file": "Serves video files for user download"
+      },
+      "3. Backend Logic": {
+        "Step 1": "Receive FB link from frontend",
+        "Step 2": "Call yt-dlp using child_process with output template `downloads/%(id)s.%(ext)s`",
+        "Step 3": "Wait for yt-dlp process to finish (stdout for logs)",
+        "Step 4": "Respond with file path and a unique /downloads route",
+        "Step 5": "Allow frontend to fetch video via /downloads"
+      },
+      "4. Frontend Workflow": {
+        "Step 1": "User enters URL, clicks +",
+        "Step 2": "Frontend calls POST /api/download for each URL",
+        "Step 3": "While waiting → show spinner/loading status",
+        "Step 4": "When response includes downloadUrl → show [Download] button",
+        "Step 5": "User clicks → browser downloads MP4"
+      },
+      "5. Bulk Downloads": {
+        "Option A": "Frontend loops POST /api/download for each added URL",
+        "Option B": "Implement POST /api/download/bulk to handle an array of URLs at once"
+      }
+    },
+    "security": {
+      "note": "This app should be for personal/educational use only. Facebook TOS prohibits redistribution/downloading of copyrighted/private content."
+    }
+  }
+}
