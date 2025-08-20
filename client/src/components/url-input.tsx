@@ -78,7 +78,7 @@ export function UrlInput() {
                 id="videoUrl"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://www.facebook.com/video/..."
+                placeholder="https://www.facebook.com/share/r/... or facebook.com/watch/?v=..."
                 className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors pr-10"
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -86,7 +86,7 @@ export function UrlInput() {
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Supports various Facebook video URL formats
+              Supports all Facebook video URL formats including shared links
             </p>
           </div>
 

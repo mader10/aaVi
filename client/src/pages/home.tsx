@@ -92,6 +92,7 @@ export default function Home() {
                 <li>• facebook.com/video/[video-id]</li>
                 <li>• facebook.com/[user]/videos/[video-id]</li>
                 <li>• facebook.com/watch/?v=[video-id]</li>
+                <li>• facebook.com/share/r/[shared-id]</li>
                 <li>• fb.watch/[shortened-url]</li>
               </ul>
             </div>

@@ -52,7 +52,16 @@ export class MemStorage implements IStorage {
   async createDownloadItem(insertItem: InsertDownloadItem): Promise<DownloadItem> {
     const id = randomUUID();
     const item: DownloadItem = { 
-      ...insertItem, 
+      ...insertItem,
+      title: insertItem.title ?? null,
+      status: insertItem.status ?? "pending",
+      progress: insertItem.progress ?? null,
+      fileSize: insertItem.fileSize ?? null,
+      duration: insertItem.duration ?? null,
+      quality: insertItem.quality ?? null,
+      fileName: insertItem.fileName ?? null,
+      errorMessage: insertItem.errorMessage ?? null,
+      downloadSpeed: insertItem.downloadSpeed ?? null,
       id, 
       createdAt: new Date() 
     };

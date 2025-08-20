@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertDownloadItemSchema.parse(req.body);
       
-      // Validate Facebook URL
+      // Validate Facebook URL (including shared URLs like facebook.com/share/r/...)
       const fbUrlPattern = /^https?:\/\/(www\.)?(facebook\.com|fb\.watch)/;
       if (!fbUrlPattern.test(validatedData.url)) {
         return res.status(400).json({ message: "Invalid Facebook URL" });
